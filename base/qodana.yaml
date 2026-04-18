@@ -1,26 +1,58 @@
-version: 1.0
+#-------------------------------------------------------------------------------#
+#   Shared Qodana rules pulled by every Dudios project. Local project           #
+#   `qodana.yaml` files only declare project-specific overrides (linter,        #
+#   JDK, per-project dependency overrides itp.).                                 #
+#-------------------------------------------------------------------------------#
+version: "1.0"
 
+# Bazowy profil inspekcji — "recommended" zawiera kompletny zestaw:
+# bugs, security, performance, code style. Poniżej tylko wzmacniamy
+# wybrane inspekcje przez opcje, nie zastępujemy profilu.
+profile:
+  name: qodana.recommended
+
+# ---------- Wzmocnienia konkretnych inspekcji ----------
+inspections:
+  # Audit licencji — włączamy Package Search żeby Qodana pytała maven.org/npm
+  # zamiast polegać wyłącznie na lokalnych metadanych. Bardziej kompletne
+  # wyniki dla paczek z niestandardowym SPDX (np. pdfbox z bundled assets).
+  - inspection: CheckDependencyLicenses
+    enabled: true
+    options:
+      usePackageSearch: true
+
+  # Wykrywanie hardcoded credentials — z `reportDefaultSuspiciousVariableNames`
+  # łapie nie tylko jawne `"secret123"`, ale też zmienne nazwane password /
+  # secret / apiKey / token itp., nawet jak wartość jest null / "" .
+  # W projekcie z JWT i DB password (hercu) + przyszłych klientach to must-have.
+  - inspection: HardcodedPasswords
+    enabled: true
+    options:
+      reportDefaultSuspiciousVariableNames: true
+
+# ---------- Common excludes ----------
+exclude:
+  - name: All
+    paths:
+      - build
+      - .gradle
+      - .idea
+
+# ---------- License audit overrides (libs używane w wielu projektach) ----------
+dependencyOverrides:
+  # Lombok is dual-licensed under BSD-3-Clause-No-Trademark OR MIT.
+  # We elect MIT — unambiguous, fully permissive, compatible with proprietary.
+  # Source: https://projectlombok.org/LICENSE
+  - name: "lombok"
+    version: "1.18.44"
+    url: "https://projectlombok.org/LICENSE"
+    licenses:
+      - key: "MIT"
+        url: "https://opensource.org/licenses/MIT"
+
+# ---------- Quality Gate (organization-wide standard) ----------
 failureConditions:
   severityThresholds:
+    any: 0
     critical: 0
-
-profile:
-  groups:
-    - groupId: Security
-      groups:
-        - "category:Java/Security"
-        - "category:Security"
-
-  inspections:
-    - group: Security
-      enabled: true
-
-    - inspection: CheckDependencyLicenses
-      enabled: true
-      options:
-        usePackageSearch: true
-
-    - inspection: HardcodedPasswords
-      enabled: true
-      options:
-        reportDefaultSuspiciousVariableNames: true
+    high: 0
