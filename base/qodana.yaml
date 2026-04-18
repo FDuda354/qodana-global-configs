@@ -1,36 +1,25 @@
 #-------------------------------------------------------------------------------#
-#   Shared Qodana rules pulled by every Dudios project. Local project           #
-#   `qodana.yaml` files only declare project-specific overrides (linter,        #
-#   JDK, per-project dependency overrides itp.).                                 #
+#   HERCU team — shared Qodana rules pulled by every project in the HERCU team. #
 #-------------------------------------------------------------------------------#
 version: "1.0"
 
-# Bazowy profil inspekcji — "recommended" zawiera kompletny zestaw:
-# bugs, security, performance, code style. Poniżej tylko wzmacniamy
-# wybrane inspekcje przez opcje, nie zastępujemy profilu.
+# Profile + jego wzmocnienia wszystko razem w jednym bloku `profile`.
 profile:
   name: qodana.recommended
 
-# ---------- Wzmocnienia konkretnych inspekcji ----------
-inspections:
-  # Audit licencji — włączamy Package Search żeby Qodana pytała maven.org/npm
-  # zamiast polegać wyłącznie na lokalnych metadanych. Bardziej kompletne
-  # wyniki dla paczek z niestandardowym SPDX (np. pdfbox z bundled assets).
-  - inspection: CheckDependencyLicenses
-    enabled: true
-    options:
-      usePackageSearch: true
+  # Wzmocnienia konkretnych inspekcji. Muszą być zagnieżdżone pod profile,
+  # nie na top-level — Qodana odrzuci plik z "Unexpected keys: [inspections]".
+  inspections:
+    - inspection: CheckDependencyLicenses
+      enabled: true
+      options:
+        usePackageSearch: true
 
-  # Wykrywanie hardcoded credentials — z `reportDefaultSuspiciousVariableNames`
-  # łapie nie tylko jawne `"secret123"`, ale też zmienne nazwane password /
-  # secret / apiKey / token itp., nawet jak wartość jest null / "" .
-  # W projekcie z JWT i DB password (hercu) + przyszłych klientach to must-have.
-  - inspection: HardcodedPasswords
-    enabled: true
-    options:
-      reportDefaultSuspiciousVariableNames: true
+    - inspection: HardcodedPasswords
+      enabled: true
+      options:
+        reportDefaultSuspiciousVariableNames: true
 
-# ---------- Common excludes ----------
 exclude:
   - name: All
     paths:
@@ -38,11 +27,7 @@ exclude:
       - .gradle
       - .idea
 
-# ---------- License audit overrides (libs używane w wielu projektach) ----------
 dependencyOverrides:
-  # Lombok is dual-licensed under BSD-3-Clause-No-Trademark OR MIT.
-  # We elect MIT — unambiguous, fully permissive, compatible with proprietary.
-  # Source: https://projectlombok.org/LICENSE
   - name: "lombok"
     version: "1.18.44"
     url: "https://projectlombok.org/LICENSE"
@@ -50,7 +35,6 @@ dependencyOverrides:
       - key: "MIT"
         url: "https://opensource.org/licenses/MIT"
 
-# ---------- Quality Gate (organization-wide standard) ----------
 failureConditions:
   severityThresholds:
     any: 0
