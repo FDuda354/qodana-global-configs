@@ -22,7 +22,12 @@ profile:
 
     # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60%)
     - inspection: JvmCoverageInspection
-      enabled: false
+      enabled: true
+      options:
+        classThreshold: 0
+        methodThreshold: 0
+        lineThreshold: 0
+        conditionThreshold: 0
 
 # ---------- License rules ----------
 # HERCU projekty to proprietary software (project key = PROPRIETARY-LICENSE).
