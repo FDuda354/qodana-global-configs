@@ -20,13 +20,7 @@ profile:
       options:
         reportDefaultSuspiciousVariableNames: true
 
-    # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60%) przez
-    # Gradle `jacocoTestCoverageVerification` wpięty do `check` w każdym
-    # backendowym projekcie HERCU. Per-klasowy próg 50% z qodana.recommended
-    # generuje szum "ClassX coverage < 50%" dla każdego nowego kontrolera
-    # i bloknuje build zanim ktoś zdąży dopisać testy. Qodana Cloud nadal
-    # wyświetla globalne % w panelu "Code coverage" — to wyłącza tylko
-    # per-klasowe alerty, nie samo raportowanie.
+    # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60%)
     - inspection: JvmCoverageInspection
       enabled: false
 
