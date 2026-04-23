@@ -1,11 +1,11 @@
 #-------------------------------------------------------------------------------#
 #   HERCU team — shared Qodana rules pulled by every project in the HERCU team. #
 #   Local project `qodana.yaml` files declare only project-specific overrides   #
-#   (linter, JDK, per-project dependency overrides).                            #
+#   (linter, JDK, per-project dependency overrides, structural excludes).       #
 #-------------------------------------------------------------------------------#
 version: "1.0"
 
-# Bazowy profil + lokalne wzmocnienia inspekcji
+# Bazowy profil + team-wide tuning inspekcji
 profile:
   name: qodana.recommended
 
@@ -20,20 +20,33 @@ profile:
       options:
         reportDefaultSuspiciousVariableNames: true
 
-# ---------- License rules (allow-list) ----------
-# Wszystkie poniższe licencje są kompatybilne z projektami proprietary Dudios:
-#   - Apache / BSD / MIT / ISC / 0BSD — fully permissive
-#   - EPL-2.0 — permissive, no copyleft na linked code
-#   - LGPL-2.1 — dynamic linking z proprietary OK
-#   - GPL-2.0-only + Classpath-exception-2.0 — the JDK/Jakarta pattern,
-#     klauzula Classpath explicitly wyłącza GPL contamination
-#   - CDDL-1.0 / 1.1 — Mozilla-style, permissive
-#   - Apache-1.1 — predecessor Apache-2.0, tożsame warunki
+    # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60%) przez
+    # Gradle `jacocoTestCoverageVerification` wpięty do `check` w każdym
+    # backendowym projekcie HERCU. Per-klasowy próg 50% z qodana.recommended
+    # generuje szum "ClassX coverage < 50%" dla każdego nowego kontrolera
+    # i bloknuje build zanim ktoś zdąży dopisać testy. Qodana Cloud nadal
+    # wyświetla globalne % w panelu "Code coverage" — to wyłącza tylko
+    # per-klasowe alerty, nie samo raportowanie.
+    - inspection: JvmCoverageInspection
+      enabled: false
+
+# ---------- License rules ----------
+# HERCU projekty to proprietary software (project key = PROPRIETARY-LICENSE).
+# Rozszerzamy domyślną listę "allowed" Qodany dla PROPRIETARY-LICENSE o licencje
+# bezpieczne dla zamkniętego redystrybutowania:
+#   - Apache / BSD / MIT / ISC / 0BSD   — fully permissive
+#   - EPL-2.0                           — permissive, no copyleft on linked code
+#   - LGPL-2.1                          — dynamic linking from proprietary OK
+#   - GPL-2.0-only + Classpath-exception-2.0 — the JDK / Jakarta pattern;
+#     Classpath Exception explicitly wyłącza GPL contamination przez linking
+#   - CDDL-1.0 / 1.1                    — Mozilla-style, permissive dla linking
+#   - Apache-1.1                        — predecessor Apache-2.0, tożsame warunki
 #   - CC-BY-4.0 / CC0-1.0 / OFL-1.1 / PUBLIC-DOMAIN — bundled assets
 #     (fonty, sample PDF-y, ikony) w jarach typu pdfbox
-#   - WTFPL — permissive, używane przez niektóre npm paczki
+#   - WTFPL                             — permissive, używane przez niektóre npm paczki
 licenseRules:
-  - keys:
+  - keys: ["PROPRIETARY-LICENSE"]
+    allowed:
       - "Apache-1.1"
       - "Apache-2.0"
       - "BSD-2-Clause"
@@ -54,8 +67,6 @@ licenseRules:
       - "OFL-1.1-no-RFN"
       - "PUBLIC-DOMAIN"
       - "WTFPL"
-    allowed:
-      - "*"
 
 # ---------- Common excludes ----------
 exclude:
@@ -65,7 +76,12 @@ exclude:
       - .gradle
       - .idea
 
-# ---------- License audit overrides (deps używane w wielu projektach) ----------
+# ---------- License audit overrides (Spring Boot 4 standard runtime) ----------
+# Eclipse Foundation + QOS-CH deps używane przez KAŻDY projekt HERCU na Spring
+# Boot 4. Wybieramy jedną preferowaną licencję z ich dual/triple-licensing,
+# żeby Qodana nie traktowała ich jako "A AND B AND C = wymaga wszystkich".
+# Jeśli wersja się zmieni przy upgrade, dopisujemy nową pozycję (Qodana dopasowuje
+# override dokładnie po name+version).
 dependencyOverrides:
   # Lombok is dual-licensed under BSD-3-Clause-No-Trademark OR MIT.
   # We elect MIT — unambiguous, fully permissive, compatible with proprietary.
@@ -86,6 +102,57 @@ dependencyOverrides:
     licenses:
       - key: "Apache-2.0"
         url: "https://www.apache.org/licenses/LICENSE-2.0"
+
+  # Jakarta EE APIs — interfaces only, bez implementacji. Classpath Exception
+  # 2.0 w ich licencji explicite pozwala linkować z proprietary code bez
+  # zarażania GPL. Source: https://projects.eclipse.org/projects/ee4j
+  - name: "jakarta.annotation-api"
+    version: "3.0.0"
+    url: "https://github.com/jakartaee/common-annotations-api"
+    licenses:
+      - key: "Classpath-exception-2.0"
+        url: "https://www.gnu.org/software/classpath/license.html"
+
+  - name: "jakarta.persistence-api"
+    version: "3.2.0"
+    url: "https://github.com/jakartaee/persistence"
+    licenses:
+      - key: "BSD-3-Clause"
+        url: "https://opensource.org/licenses/BSD-3-Clause"
+
+  - name: "jakarta.transaction-api"
+    version: "2.0.1"
+    url: "https://github.com/jakartaee/transactions"
+    licenses:
+      - key: "Classpath-exception-2.0"
+        url: "https://www.gnu.org/software/classpath/license.html"
+
+  # Logback jest dual-licensed "EPL-2.0 OR LGPL-2.1-only" (user's choice, nie AND).
+  # Wybieramy EPL-2.0 — nie modyfikujemy źródeł, tylko linkujemy runtime.
+  # Source: https://logback.qos.ch/license.html
+  - name: "logback-classic"
+    version: "1.5.32"
+    url: "https://logback.qos.ch/license.html"
+    licenses:
+      - key: "EPL-2.0"
+        url: "https://www.eclipse.org/legal/epl-2.0/"
+
+  - name: "logback-core"
+    version: "1.5.32"
+    url: "https://logback.qos.ch/license.html"
+    licenses:
+      - key: "EPL-2.0"
+        url: "https://www.eclipse.org/legal/epl-2.0/"
+
+  # AspectJ Weaver — triple-licensed historycznie (Apache-1.1 / BSD-3-Clause /
+  # EPL-2.0), binarka z 1.9.25.1 effectively EPL-2.0. Pick BSD-3-Clause
+  # z pierwotnego AspectJ licensing — najczystsze dla proprietary linking.
+  - name: "aspectjweaver"
+    version: "1.9.25.1"
+    url: "https://www.eclipse.org/aspectj/"
+    licenses:
+      - key: "BSD-3-Clause"
+        url: "https://opensource.org/licenses/BSD-3-Clause"
 
 # ---------- Quality Gate (organization-wide standard) ----------
 failureConditions:
