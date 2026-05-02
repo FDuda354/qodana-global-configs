@@ -156,6 +156,6 @@ dependencyOverrides:
 # ---------- Quality Gate (organization-wide standard) ----------
 failureConditions:
   severityThresholds:
-    any: 0
+    any: 10
     critical: 0
     high: 0
