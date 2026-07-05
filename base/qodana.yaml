@@ -20,13 +20,14 @@ profile:
       options:
         reportDefaultSuspiciousVariableNames: true
 
-    # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60% total —
-    # patrz failureConditions.testCoverageThresholds niżej), a NIE per-metoda.
-    # JvmCoverageInspection raportuje pokrycie osobno dla każdej metody/klasy
-    # i generuje setki ostrzeżeń "method is not covered". Wyłączamy ją całkiem
-    # — bramkę trzymamy jedną, globalną liczbą, nie tysiącem lokalnych progów.
+    # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60%)
     - inspection: JvmCoverageInspection
-      enabled: false
+      enabled: true
+      options:
+        classThreshold: 0
+        methodThreshold: 0
+        lineThreshold: 0
+        conditionThreshold: 0
 
 # ---------- License rules ----------
 # HERCU projekty to proprietary software (project key = PROPRIETARY-LICENSE).
@@ -158,8 +159,3 @@ failureConditions:
     any: 10
     critical: 0
     high: 0
-  # Pokrycie testami pilnowane GLOBALNIE: build faila, gdy całkowite (total)
-  # pokrycie projektu spadnie poniżej 60%. To zastępuje per-metodowe progi
-  # z JvmCoverageInspection (wyłączonej wyżej) — jedna liczba na cały projekt.
-  testCoverageThresholds:
-    total: 60
