@@ -20,14 +20,15 @@ profile:
       options:
         reportDefaultSuspiciousVariableNames: true
 
-    # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60%)
+    # Team-wide decyzja: pokrycie testami pilnujemy GLOBALNIE (60%,
+    # failureConditions.testCoverageThresholds poniżej). JvmCoverageInspection
+    # ma tylko opcje classThreshold / methodThreshold / warnMissingCoverage —
+    # zerujemy progi per-klasa/metoda, żeby nie szumiały.
     - inspection: JvmCoverageInspection
       enabled: true
       options:
         classThreshold: 0
         methodThreshold: 0
-        lineThreshold: 0
-        conditionThreshold: 0
 
 # ---------- License rules ----------
 # HERCU projekty to proprietary software (project key = PROPRIETARY-LICENSE).
@@ -159,3 +160,5 @@ failureConditions:
     any: 10
     critical: 0
     high: 0
+  testCoverageThresholds:
+    total: 60
